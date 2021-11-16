@@ -12,13 +12,13 @@ def read_input(image_file, label_file):
     return images, labels
 
 
+'''
 class Neuron():
     def __init__(self):
         # to make sure that inputs are getting through
         # input
-        self.weights = []
         self.output = 0
-
+'''
 
 '''
 class Layer():
@@ -44,7 +44,7 @@ class HiddenLayer():
         self.weight_matrix = np.empty([
             self.num_neurons, self.num_inputs
         ])
-        self.outputs = np.empty(num_neurons)
+        self.outputs = np.empty([num_neurons])
 
     def calculate_weight_matrix(self):
         for neuron in range(self.num_neurons):
@@ -53,6 +53,7 @@ class HiddenLayer():
 
     def calculate_outputs(self, inputs):
         self.outputs = np.matmul(self.weight_matrix, inputs)
+
 
 if __name__ == "__main__":
     # feed forward network
@@ -67,63 +68,21 @@ if __name__ == "__main__":
     images, labels = read_input("train_image1.csv", "train_label.csv")
     # input layer
     inputs = images[0]
+    print(sum(inputs))
 
-    
     num_neurons_hidden_layer_1 = 4
-    hidden_layer_1 = HiddenLayer(num_neurons_hidden_layer_1, len(inputs))
+    hidden_layer_1 = HiddenLayer(len(inputs), num_neurons_hidden_layer_1)
     hidden_layer_1.calculate_weight_matrix()
     hidden_layer_1.calculate_outputs(inputs)
 
     num_neurons_hidden_layer_2 = 5
-    hidden_layer_2 = HiddenLayer(num_neurons_hidden_layer_2, num_neurons_hidden_layer_1)
+    hidden_layer_2 = HiddenLayer(
+        num_neurons_hidden_layer_1, num_neurons_hidden_layer_2)
     hidden_layer_2.calculate_weight_matrix()
-    hidden_layer_2.calculate_outputs(hidden_layer_1.output)
+    hidden_layer_2.calculate_outputs(hidden_layer_1.outputs)
 
     num_classes = 10
-    output_layer = HiddenLayer(num_classes)
+    output_layer = HiddenLayer(num_neurons_hidden_layer_2, num_classes)
     output_layer.calculate_weight_matrix()
-    hidden_layer_2.calculate_outputs(hidden_layer_2.output)
-    print(output_layer.output)
-    
-
-    # main idea: cross product of inputs times weights
-
-    # hidden layer 1
-    # matrix of weights
-    # matrix of inputs
-    # row of weights x column of input = output
-    
-    '''
-    num_inputs_hidden_1 = len(inputs)
-    num_neurons_hidden_1 = 10
-    weight_matrix_input_to_hidden_1 = np.empty(
-        [num_neurons_hidden_1, num_inputs_hidden_1])
-    for neuron in range(num_neurons_hidden_1):
-        for input in range(num_inputs_hidden_1):
-            weight_matrix_input_to_hidden_1[neuron][input] = 1
-
-    hidden_layer_1 = np.matmul(weight_matrix_input_to_hidden_1, inputs)
-    
-    # hidden layer 2
-    num_inputs_hidden_2 = len(hidden_layer_1)
-    num_neurons_hidden_2 = 10
-    weight_matrix_hidden_1_to_hidden_2 = np.empty(
-        [num_neurons_hidden_2, num_inputs_hidden_2])
-    for neuron in range(num_neurons_hidden_2):
-        for input in range(num_inputs_hidden_2):
-            weight_matrix_hidden_1_to_hidden_2[neuron][input] = 2
-
-    hidden_layer_2 = np.matmul(
-        weight_matrix_hidden_1_to_hidden_2, hidden_layer_1)
-
-    # output layer
-    num_inputs_output = len(hidden_layer_2)
-    num_classes_output = 10
-    weight_matrix_hidden_2_to_output = np.empty(
-        [num_classes_output, num_inputs_output])
-    for classification in range(num_classes_output):
-        for input in range(num_inputs_output):
-            weight_matrix_hidden_2_to_output[classification][input] = 3
-
-    classes = np.matmul(weight_matrix_hidden_2_to_output, hidden_layer_2)
-    '''
+    output_layer.calculate_outputs(hidden_layer_2.outputs)
+    print(output_layer.outputs)
