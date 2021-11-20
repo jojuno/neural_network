@@ -16,6 +16,7 @@ def read_input(image_file, label_file):
     labels = np.genfromtxt(label_file, delimiter="\n")
     return images, labels
 
+
 '''
 class NeuralNetwork():
     def __init__(self):
@@ -50,6 +51,7 @@ class HiddenLayer():
             for output in self.outputs:
                 vfunc(output)
 '''
+
 
 def sigmoid_function(x):
     return 1 / (1 + math.e ** (-x))
@@ -123,6 +125,8 @@ def calculate_new_weight(old_weight, learning_rate, delta_e):
 def softmax_derivative(x):
     return x * (1 - x)
 
+
+'''
 def update_weight(weight, final_output, neuron_output, expected, learning_rate):
     dl_dw11 = 0
     dl_dyhat = -(expected - final_output)
@@ -134,12 +138,17 @@ def update_weight(weight, final_output, neuron_output, expected, learning_rate):
     print(dl_dw11)
     weight = weight - learning_rate * dl_dw11
     return weight
+'''
+
 
 class Neuron():
     def __init__(self, num_connections):
         self.output = 0
         self.input = 0
         self.weights = np.empty(num_connections)
+        self.num_weights = num_connections
+        self.gradients = np.empty(0)
+
 
 class Layer():
     def __init__(self, num_neurons, num_previous_neurons, initial_weight):
@@ -153,21 +162,26 @@ class Layer():
 
 
 class NeuralNetwork():
-    def __init__(self, num_inputs, layers, num_outputs, activation_function, final_function):
+    def __init__(self, num_inputs, layers, num_outputs, activation_function, final_function, batch_size):
         self.num_inputs = num_inputs
-        self.input_layer = []
+        self.input_layer = np.empty(0)
         self.output_layer = []
         self.num_layers = len(layers)
         self.layers = layers
         self.num_outputs = num_outputs
+        self.outputs = np.empty(num_outputs)
+        self.expected = np.empty(num_outputs)
+        self.errors = np.empty(num_outputs)
         self.activation_function = activation_function
         self.final_function = final_function
+        self.batch_size = batch_size
+        self.batch_count = 0
 
+    '''
     def initialize_input_layer(self, inputs):
         for i in range(self.num_inputs):
-            input_neuron = Neuron(0)
-            input_neuron.input = inputs[i]
-            self.input_layer.append(input_neuron)
+            self.input_layer.append(inputs[i])
+    '''
 
     def initialize_layers(self, initial_weight):
         for i in range(self.num_layers):
@@ -179,32 +193,91 @@ class NeuralNetwork():
                     for k in range(self.layers[i-1].num_neurons):
                         self.layers[i].neurons[j].weights[k] = initial_weight
 
-    def forward_feed(self):
+    def initialize_expected(self, expected):
+        self.expected = expected
+
+    def forward_feed(self, inputs):
+
+        # input layer
+        for input in inputs:
+            self.input_layer = np.append(self.input_layer, input)
+
         for i in self.num_layers:
             if i == 0:
-                vectorized_activation_function = np.vectorize(self.activation_function)
                 for neuron in self.layers[i]:
                     input = np.matmul(neuron.weights, self.input_layer)
                     neuron.input = input
+                    vectorized_activation_function = np.vectorize(
+                        self.activation_function)
                     neuron.output = vectorized_activation_function(input)
-            elif i == (self.num_layers-1):
-                vectorized_final_function = np.vectorize(self.final_function)
-                for neuron in self.layers[i]:
-                    input = np.matmul(neuron.weights, self.input_layer)
+            else:
+                for j in self.layers[i].num_neurons:
+                    input = 0
+                    previous_layer = self.layers[i-1]
+                    neuron = self.layers[i].neurons[j]
+                    for k in range(previous_layer.num_neurons):
+                        input += neuron.weights[k] * \
+                            previous_layer.neurons[k].output
                     neuron.input = input
-                    neuron.output = vectorized_final_function(input)
+                    if i != (self.num_layers-1):
+                        vectorized_activation_function = np.vectorize(
+                            self.activation_function)
+                        neuron.output = vectorized_activation_function(input)
+                    # output layer
+                    else:
+                        vectorized_final_function = np.vectorize(
+                            self.final_function)
+                        neuron.output = vectorized_final_function(input)
 
-    def back_propagate(self):
+    # calculate output portion of gradient
+    # recursively calculate layer portion of gradient
+    def calculate_gradients(self):
+        # list iterates through the layers backwards from top to bottom
+        gradients = np.empty(0)
+        # calculate for one layer.
+        dl_dw = 1  # identity multiplication
+        dl_dyhat = 0
+        dyhat_doutput = 0
         for i in reversed(range(self.num_layers)):
-            layer = self.layers[i]
-            for j in range(layer.num_neurons):
+            # output portion
+            current_layer = self.layers[i]
+            output_layer = self.layers[-1]
+            for j in range(output_layer.num_neurons):
+                neuron = output_layer.num_neurons[j]
+                for k in neuron.num_weights:
+                    weight = neuron.weights[k]
+                    dl_dyhat = -(self.expected[k] - neuron.output)
+                    dyhat_doutput = neuron.output * \
+                        (1 - neuron.output)
+                    dl_dw *= (dl_dyhat * dyhat_doutput)
 
+            # layer portion
+            num_reps = self.num_layers - i
+            # if the weight is in between, you don't take the derivative
+            # store the gradient when it's calculated
+            # assign the list to the neuron
+            while num_reps != -1:
+                layer = self.layers[num_reps]
+                for neuron in layer.neurons:
+                    doutput_dinput = ((1 + math.exp(-1 * neuron.input))
+                                      ** -2) * math.exp(-1 * neuron.input)
+                    # previous layer is the input layer
+                    if num_reps == 0:
+                        for neuron_previous in range(self.input_layer):
+                            dinput_dw = neuron_previous.output
+                            dl_dw *= (doutput_dinput * dinput_dw)
+                            gradients = np.append(gradients, dl_dw)
+                    else:
+                        for neuron_previous in range(self.layers[num_reps-1]):
+                            dinput_dw = neuron_previous.output
+                            dl_dw *= (doutput_dinput * dinput_dw)
 
-        for neuron, final_output, expected in zip(self.output_layer, final_outputs, classifications):
-            print("neuron, expected:", expected)
+        '''
+        for neuron, error in zip(self.layers[-1].neurons, self.errors):
             for weight in neuron.weights:
                 # old weight - learning_parameter * delta_e
-                weight = update_weight(weight, final_output, neuron.output, expected, learning_rate)
+                weight = update_weight(
+                    weight, final_output, neuron.output, expected, learning_rate)
                 print("new weight:", weight)
 
         depth = 0
@@ -213,22 +286,28 @@ class NeuralNetwork():
                 print("neuron, expected:", expected)
                 for weight in neuron.weights:
                     # old weight - learning_parameter * delta_e
-                    weight = update_weight(weight, final_output, neuron.output, expected, learning_rate)
+                    weight = update_weight(
+                        weight, final_output, neuron.output, expected, learning_rate)
                     print("new weight:", weight)
 
         dl_dw11 = 0
         dl_dyhat = -(expected - final_output)
         dyhat_doutput = final_output * (1 - final_output)
-        doutput_dinput = ((1 + math.exp(-1 * neuron_output)) ** -2) * math.exp(-1 * neuron_output)
+        doutput_dinput = ((1 + math.exp(-1 * neuron_output))
+                          ** -2) * math.exp(-1 * neuron_output)
         dinput_dw11 = hidden_layer_1.neurons[0].weights[0]
         dl_dw11 = dl_dyhat * dyhat_doutput * doutput_dinput * dinput_dw11
-        
+
         print(dl_dw11)
         weight = weight - learning_rate * dl_dw11
         return weight
+        '''
 
-
-
+    # average the gradients across each weight;
+    def back_propagate(self, learning_rate):
+        pass
+        # print(dl_dw11)
+        #weight = weight - learning_rate * dl_dw11
     '''
     def initialize_output_layer(self, num_inputs, initial_weight):
         for i in range(self.num_outputs):
@@ -240,41 +319,40 @@ class NeuralNetwork():
                 self.output_layer[i].weights[j] = initial_weight
     '''
 
-    #def update_weights(self, expected, learning_rate):
+    # def update_weights(self, expected, learning_rate):
     def update_weights(self, final_outputs, expected_outputs, learning_rate):
 
-        
 
 if __name__ == "__main__":
 
     images = []
     labels = []
     images, labels = read_input("train_image1.csv", "train_label.csv")
-    batch_size = 1
+    batch_size = 2
     batches = divide_into_batches(images, labels, batch_size)
 
-    # input layer
-    # each set in the batch comes with an image and a label.
-    # eventually, update weights after a batch; currently, it's over one sample.
-    inputs = batches[0][0][0]
-    label = int(batches[0][0][1])
-
-    
-
     layers = []
+    num_inputs = 28*28
     layer_1_num_neurons = 64
-    layer_1 = Layer(layer_1_num_neurons)
-    #hidden_layer_2_num_neurons = 32
-    #hidden_layer_2 = Layer(hidden_layer_2_num_neurons)
     num_outputs = 10
+    layer_1 = Layer(layer_1_num_neurons)
     output_layer = Layer(num_outputs)
-    #layers.append(hidden_layer_2)
     layers.append(layer_1)
     layers.append(output_layer)
-    num_inputs = 28*28
-    num_outputs = 10
-    neuralNetwork = NeuralNetwork(num_inputs, layers, sigmoid_function, softmax_function)
+    neuralNetwork = NeuralNetwork(
+        num_inputs, layers, sigmoid_function, softmax_function)
 
+    # each set in the batch comes with an image and a label.
+    # update weights after a batch
+    for batch in batches:
+        inputs = batch[0][0]
+        label = int(batch[0][1])
+        expected = np.zeros(10)
+        expected[label] = 1
+        neuralNetwork.forward_feed(inputs)
+        neuralNetwork.back_propagate()
+
+    '''
     num_neurons_hidden_layer_1 = 4
     hidden_layer_1_initial_weight = 1
     hidden_layer_1 = HiddenLayer(
@@ -282,7 +360,7 @@ if __name__ == "__main__":
     hidden_layer_1.initialize_weight_matrix(hidden_layer_1_initial_weight)
     hidden_layer_1.calculate_outputs(inputs, sigmoid_function)
 
-    '''
+    
     num_neurons_hidden_layer_2 = 5
     hidden_layer_2_initial_weight = 1
     hidden_layer_2 = HiddenLayer(
@@ -319,14 +397,16 @@ if __name__ == "__main__":
         print("neuron, expected:", expected)
         for weight in neuron.weights:
             # old weight - learning_parameter * delta_e
-            weight = update_weight(weight, final_output, neuron.output, expected, learning_rate)
+            weight = update_weight(weight, final_output,
+                                   neuron.output, expected, learning_rate)
             print("new weight:", weight)
 
     for neuron_input, neuron_output, final_output, expected in zip(hidden_layer_1.neurons, output_layer.neurons, final_outputs, classifications):
         print("neuron, expected:", expected)
         for weight in neuron_input.weights:
             # old weight - learning_parameter * delta_e
-            weight = update_weight(weight, final_output, neuron.output, expected, learning_rate)
+            weight = update_weight(weight, final_output,
+                                   neuron.output, expected, learning_rate)
             print("new weight:", weight)
 
 '''
@@ -403,4 +483,3 @@ if __name__ == "__main__":
             weight = update_weight(weight, final_output, neuron.output, expected, learning_rate)
             print("new weight:", weight)
 '''
-
