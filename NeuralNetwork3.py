@@ -2,10 +2,10 @@ import numpy as np
 from io import StringIO
 import random
 import math
-import pdb
 import time
-from csv import DictReader
+import csv
 import sys
+import pandas
 
 # take in input
 # each input node represents a pixel
@@ -20,126 +20,109 @@ import sys
 def initialize_network(sizes):
     input_layer = sizes[0]
     hidden_layer_1 = sizes[1]
-    output_layer = sizes[2]
+    hidden_layer_2 = sizes[2]
+    output_layer = sizes[3]
     network = {
         #dot after number: treat it like a float
         'w0': np.random.randn(hidden_layer_1, input_layer) * np.sqrt(1. / hidden_layer_1),
-        'w1': np.random.randn(output_layer, hidden_layer_1) * np.sqrt(1. / output_layer)
+        'w1': np.random.randn(hidden_layer_2, hidden_layer_1) * np.sqrt(1. / hidden_layer_2),
+        'w2': np.random.randn(output_layer, hidden_layer_2) * np.sqrt(1. / output_layer)
     }
     return network
 
-def sigmoid_function(x):
-    for value in x:
-        if value < 0:
-            value = 1 - 1/(1 + math.exp(value))
-        else:
-            value = 1/(1 + math.exp(-value))
-    return x
+num_inputs = 28*28
+num_outputs = 10
+layer_sizes = [num_inputs, 128, 64, num_outputs]
+nn = initialize_network(layer_sizes)
 
-def sigmoid_derivative(input):
-    return (sigmoid_function(-input) ** -2) * np.exp(-input)
+def sigmoid(x, derivative = False):
+    if derivative:
+        return np.exp(-x) / ((np.exp(-x) + 1) ** 2)
+    else:
+        return 1 / (1 + np.exp(-x))
 
-def softmax_function(outputs):
+def softmax(x, derivative = False):
+    exp_shifted = np.exp(x - x.max())
+    if derivative:
+        return exp_shifted / np.sum(exp_shifted, axis = 0) * (1 - exp_shifted / np.sum(exp_shifted, axis = 0))
+    else:
+        return exp_shifted / np.sum(exp_shifted, axis = 0)
 
-    outputs = np.exp(outputs)
-
-    norm_values = outputs / np.sum(outputs)
-
-    return norm_values
-
-def softmax_derivative(values):
-    calculated_values = []
-    for value in values:
-        calculated_values.append(value * (1 - value))
-    return calculated_values
-
-def forward_feed(inputs, nn):
+def forward_feed(inputs):
     nn_state = {}
 
     nn_state['o0'] = inputs
     
-    nn_state['z1'] = np.dot(nn['w0'], nn_state['o0'])
-    nn_state['o1'] = sigmoid_function(nn_state['z1'])
+    nn_state['z1'] = np.matmul(nn['w0'], nn_state['o0'])
+    nn_state['o1'] = sigmoid(nn_state['z1'], False)
 
-    nn_state['z2'] = np.dot(nn['w1'], nn_state['o1'])
-    nn_state['o2'] = softmax_function(nn_state['z2'])
+    nn_state['z2'] = np.matmul(nn['w1'], nn_state['o1'])
+    nn_state['o2'] = sigmoid(nn_state['z2'], False)
+
+    nn_state['z3'] = np.matmul(nn['w2'], nn_state['o2'])
+    nn_state['o3'] = softmax(nn_state['z3'], False)
 
     return nn_state
 
-def calculate_gradients(nn_state, expected):
-    for i in reversed(range(2)):
-        if i == 1:
-            #output layer
-            nn_state['g2'] = []
-            for j in range(10):
-                gradient = nn_state['o1'][j] * sigmoid_derivative(nn_state['z2'][j]) * -(expected[j] - nn_state['o2'][j])
-                nn_state['g2'].append(gradient)
-        else:
-            nn_state['g1'] = []
-            for j in range(64):
-                gradient = nn_state['o0'][j] * sigmoid_derivative(nn_state['z1'][j])
-                for k in range(10):
-                    gradient *= nn_state['o1'][k] * sigmoid_derivative(nn_state['z2'][k]) * -(expected[k] - nn_state['o2'][k])
-                nn_state['g1'].append(gradient)
+def calculate_gradients(inputs, expected):
+    nn_state = forward_feed(inputs)
 
-def calculate_new_weight(old_weight, learning_rate, gradient):
-    return old_weight - learning_rate * gradient
+    nn_state['g3'] = nn_state['o3'] - expected
+    nn_state['g2'] = np.matmul(nn_state['g3'], nn['w2']) * softmax(nn_state['z2'], derivative = True)
+    nn_state['g1'] = np.matmul(nn_state['g2'], nn['w1']) * sigmoid(nn_state['z1'], derivative = True)
+
+    nn_state['D2'] = np.outer(nn_state['g3'], nn_state['o2'])
+    nn_state['D1'] = np.outer(nn_state['g2'], nn_state['o1'])
+    nn_state['D0'] = np.outer(nn_state['g1'], nn_state['o0'])
+
+    return nn_state
 
 def get_cost(outputs, expected_values):
     costs = []
     for output, expected in zip(outputs, expected_values):
         costs.append((1/2) * ((expected - output) ** 2))
-    return sum(costs)
+    return -sum(costs)
 
-epochs = 100
+epochs = 10
 learning_rate = 0.001
-num_inputs = 28*28
-num_outputs = 10
-batch_size = 500
-layer_sizes = [num_inputs, 64, num_outputs]
-num_layers = 3
-nn = initialize_network(layer_sizes)
-images = np.genfromtxt(sys.argv[1], delimiter=",")
-labels = np.genfromtxt(sys.argv[2], delimiter="\n")
-gradients_g1 = np.zeros(64)
-gradients_g2 = np.zeros(10)
+batch_size = 1
+#images = np.genfromtxt(sys.argv[1], delimiter=",")
+images = np.genfromtxt("./train_image.csv", delimiter=",")
+#labels = np.genfromtxt(sys.argv[2], delimiter="\n")
+labels = np.genfromtxt("./train_label.csv", delimiter="\n")
 print("TRAINING TRAINING TRAINING TRAINING TRAINING TRAINING TRAINING")
+accuracies = []
+
 for e in range(epochs):
     print('epoch', e)
     start_time = time.time()
-    samples = 10000
+    samples = random.sample(range(60000), 10000)
     cost = 0
     num_correct = 0
-    for i in range(samples):
+    num_samples = 0
+    for i in samples:
+        input = images[i]
+        label = labels[i]
+        expected_values = np.zeros(num_outputs)
+        expected_values[int(label)] = 1
+        nn_state = calculate_gradients(input, expected_values)
+        if (num_samples+1) % batch_size == 0:
+            #update weights
+            nn['w0'] -= learning_rate * nn_state['D0']
+            nn['w1'] -= learning_rate * nn_state['D1']
+            nn['w2'] -= learning_rate * nn_state['D2']
+        cost += get_cost(nn_state['o3'], expected_values)
 
-                input = images[i]
-                label = labels[i]
-                expected_values = np.zeros(num_outputs)
-                expected_values[int(label)] = 1
-                nn_state = forward_feed(input, nn)
-                nn_state = calculate_gradients(nn_state, expected_values)
-                gradients_g1 = [sum(x) for x in zip(gradients_g1, nn_state['g1'])]
-                gradients_g2 = [sum(x) for x in zip(gradients_g2, nn_state['g2'])]
-                if i+1 % batch_size == 0:
-                    #update weights
-                    for weight, gradient in zip(nn['w0'], nn_state['g1']):
-                        weight = weight - learning_rate * gradient
-                        gradients_g1 = np.zeros(64)
-                    for weight, gradient in zip(nn['w1'], nn_state['g2']):
-                        weight = weight - learning_rate * gradient
-                        gradients_g2 = np.zeros(10)
-                cost += get_cost(nn_state['o2'], expected_values)
+        if np.argmax(nn_state['o3']) == np.argmax(expected_values):
+            num_correct += 1
+        num_samples += 1
 
-                #nn['w0'] -= learning_rate * state['D0']
-                #nn['w1'] -= learning_rate * state['D1']
-
-                if np.argmax(nn_state['o2']) == np.argmax(expected_values):
-                    num_correct += 1
-
+    print(nn)
     print("time:", time.time() - start_time)
 
-    cost /= samples
-    accuracy = num_correct / samples
+    cost /= len(samples)
+    accuracy = num_correct / len(samples)
+    accuracies.append(accuracy)
     print('cost:', cost, 'accuracy:', accuracy)
 
-
+print(accuracies)
