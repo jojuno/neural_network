@@ -1,0 +1,7 @@
+500 batch size
+200 epochs
+3 hidden layers, 3 or 4 nodes
+
+np.random.randn(output_num, input_num / np.sqrt(input_num))
+
+bias = add 1
