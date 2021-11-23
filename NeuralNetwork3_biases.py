@@ -57,12 +57,16 @@ def softmax(x, derivative=False):
         return exp_shifted / np.sum(exp_shifted, axis=0)
 
 
+def cross_entropy_derivative(output, expected):
+    return -((expected - output) / ((1-output) * output))
+
+
 def cross_entropy(o, y, derivative=False):
     if derivative:
-        result = np.empty(len(o))
-        for result_value, output, expected in zip(result, o, y):
-            result_value = -((expected - output) / ((1-output) * output))
-        return result
+        results = np.empty(len(o))
+        for result, output, expected in zip(results, o, y):
+            result = -((expected - output) / ((1-output) * output))
+        return results
     else:
         c = np.dot(y, np.log(o)) + np.dot((1 - y), np.log(1 - o))
         return -c
@@ -127,7 +131,7 @@ def get_cost(outputs, expected_values):
 
 
 epochs = 200
-learning_rate = 0.005
+learning_rate = 0.001
 batch_size = 1
 # images = np.genfromtxt(sys.argv[1], delimiter=",")
 images = np.genfromtxt("./train_image.csv", delimiter=",")

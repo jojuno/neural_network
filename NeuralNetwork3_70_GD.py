@@ -52,23 +52,6 @@ def softmax(x, derivative=False):
         return exp_shifted / np.sum(exp_shifted, axis=0)
 
 
-'''
-def cross_entropy_derivative(output, expected):
-    return -((expected - output) / ((1-output) * output))
-'''
-
-
-def cross_entropy(o, y, derivative=False):
-    if derivative:
-        results = np.zeros(len(o))
-        for result, output, expected in zip(results, o, y):
-            result = -((expected - output) / ((1-output) * output))
-        return results
-    else:
-        c = np.dot(y, np.log(o)) + np.dot((1 - y), np.log(1 - o))
-        return -c
-
-
 def forward_feed(inputs):
     nn_state = {}
 
@@ -89,7 +72,7 @@ def forward_feed(inputs):
 def calculate_gradients(inputs, expected):
     nn_state = forward_feed(inputs)
 
-    nn_state['g3'] = cross_entropy(nn_state['o3'], expected, True)
+    nn_state['g3'] = nn_state['o3'] - expected
     nn_state['g2'] = np.matmul(nn_state['g3'], nn['w2']) * \
         softmax(nn_state['z2'], derivative=True)
     nn_state['g1'] = np.matmul(nn_state['g2'], nn['w1']) * \
@@ -102,23 +85,23 @@ def calculate_gradients(inputs, expected):
     return nn_state
 
 
-'''
 def get_cost(outputs, expected_values):
     costs = []
     for output, expected in zip(outputs, expected_values):
         costs.append((1/2) * ((expected - output) ** 2))
     return -sum(costs)
-'''
+
 
 epochs = 200
-learning_rate = 0.001
-batch_size = 100
+learning_rate = 0.0001
+batch_size = 1
 #images = np.genfromtxt(sys.argv[1], delimiter=",")
 images = np.genfromtxt("./train_image.csv", delimiter=",")
 #labels = np.genfromtxt(sys.argv[2], delimiter="\n")
 labels = np.genfromtxt("./train_label.csv", delimiter="\n")
 print("TRAINING TRAINING TRAINING TRAINING TRAINING TRAINING TRAINING")
 accuracies = []
+nn_state_aggregation = {}
 
 for e in range(epochs):
     print('epoch', e)
@@ -135,22 +118,29 @@ for e in range(epochs):
         expected_values = np.zeros(num_outputs)
         expected_values[int(label)] = 1
         nn_state = calculate_gradients(input, expected_values)
+        if num_samples % batch_size == 0:
+            nn_state_aggregation = dict(nn_state)
+        else:
+            for value1, value2 in zip(nn_state_aggregation.values(), nn_state.values()):
+                value1 += value2
         if (num_samples+1) % batch_size == 0:
+            # print(nn_state_aggregation)
             # update weights
-            nn['w0'] -= learning_rate * nn_state['D0']
-            nn['w1'] -= learning_rate * nn_state['D1']
-            nn['w2'] -= learning_rate * nn_state['D2']
-        cost += cross_entropy(nn_state['o3'], expected_values, False)
+            for value in nn_state_aggregation.values():
+                value /= batch_size
+            nn['w0'] -= learning_rate * nn_state_aggregation['D0']
+            nn['w1'] -= learning_rate * nn_state_aggregation['D1']
+            nn['w2'] -= learning_rate * nn_state_aggregation['D2']
+            nn_state_aggregation = {}
+        cost += get_cost(nn_state['o3'], expected_values)
 
         if np.argmax(nn_state['o3']) == np.argmax(expected_values):
             num_correct += 1
         num_samples += 1
 
-    print("time:", time.time() - start_time)
-
     cost /= len(samples)
     accuracy = num_correct / len(samples)
     accuracies.append(accuracy)
+    pyplot.plot(accuracies)
+    pyplot.show()
     print('cost:', cost, 'accuracy:', accuracy)
-pyplot.plot(accuracies)
-pyplot.show()
