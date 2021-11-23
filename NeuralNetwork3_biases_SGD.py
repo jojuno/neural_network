@@ -96,7 +96,7 @@ def forward_feed(inputs):
 def calculate_gradients(inputs, expected):
     nn_state = forward_feed(inputs)
 
-    # nn_state['g4'] = nn_state['o4'] - expected
+    #nn_state['g4'] = nn_state['o4'] - expected
     nn_state['g4'] = cross_entropy(nn_state['o4'], expected, derivative=True)
     nn_state['g3'] = np.matmul(
         nn_state['g4'], nn['w3'][:, 0:32]) * softmax(nn_state['z3'], derivative=True)
@@ -129,14 +129,14 @@ def get_cost(outputs, expected_values):
 epochs = 200
 learning_rate = 0.005
 batch_size = 1
-# images = np.genfromtxt(sys.argv[1], delimiter=",")
+#images = np.genfromtxt(sys.argv[1], delimiter=",")
 images = np.genfromtxt("./train_image.csv", delimiter=",")
-# labels = np.genfromtxt(sys.argv[2], delimiter="\n")
+#labels = np.genfromtxt(sys.argv[2], delimiter="\n")
 labels = np.genfromtxt("./train_label.csv", delimiter="\n")
 print("TRAINING TRAINING TRAINING TRAINING TRAINING TRAINING TRAINING")
 accuracies = []
 
-nn_state_aggregation = {}
+
 for e in range(epochs):
     print('epoch', e)
     start_time = time.time()
@@ -151,22 +151,15 @@ for e in range(epochs):
         label = labels[i]
         expected_values = np.zeros(num_outputs)
         expected_values[int(label)] = 1
+        #nn_state = forward_feed(expected_values)
+
         nn_state = calculate_gradients(input, expected_values)
-        if num_samples == 0:
-            nn_state_aggregation = dict(nn_state)
-        else:
-            for value1, value2 in zip(nn_state.values(), nn_state_aggregation.values()):
-                value2 += value1
         if (num_samples+1) % batch_size == 0:
             # update weights
-            for value in nn_state_aggregation.values():
-                value /= batch_size
-            nn['w0'] -= learning_rate * nn_state_aggregation['D0']
-            nn['w1'] -= learning_rate * nn_state_aggregation['D1']
-            nn['w2'] -= learning_rate * nn_state_aggregation['D2']
-            nn['w3'] -= learning_rate * nn_state_aggregation['D3']
-            nn_state_aggregation = {}
-            num_samples = -1
+            nn['w0'] -= learning_rate * nn_state['D0']
+            nn['w1'] -= learning_rate * nn_state['D1']
+            nn['w2'] -= learning_rate * nn_state['D2']
+            nn['w3'] -= learning_rate * nn_state['D3']
         cost += cross_entropy(nn_state['o4'], expected_values)
 
         if np.argmax(nn_state['o4']) == np.argmax(expected_values):
@@ -182,7 +175,7 @@ for e in range(epochs):
 pyplot.plot(accuracies)
 pyplot.show()
 
-# images_test = np.genfromtxt(sys.argv[3], delimiter=",")
+#images_test = np.genfromtxt(sys.argv[3], delimiter=",")
 images_test = np.genfromtxt("./test_image.csv", delimiter=",")
 predictions = []
 for input in images_test:
