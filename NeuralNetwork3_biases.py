@@ -27,10 +27,10 @@ def initialize_network(sizes):
     network = {
         #dot after number: treat it like a float
         #add 1 for biases
-        'w0': np.random.randn(hidden_layer_1, input_layer) * np.sqrt(1. / hidden_layer_1),
-        'w1': np.random.randn(hidden_layer_2, hidden_layer_1) * np.sqrt(1. / hidden_layer_2),
-        'w2': np.random.randn(hidden_layer_3, hidden_layer_2) * np.sqrt(1. / hidden_layer_3),
-        'w3': np.random.randn(output_layer, hidden_layer_3) * np.sqrt(1. / output_layer)
+        'w0': np.random.randn(hidden_layer_1, input_layer +1) * np.sqrt(1. / hidden_layer_1),
+        'w1': np.random.randn(hidden_layer_2, hidden_layer_1 +1) * np.sqrt(1. / hidden_layer_2),
+        'w2': np.random.randn(hidden_layer_3, hidden_layer_2 +1) * np.sqrt(1. / hidden_layer_3),
+        'w3': np.random.randn(output_layer, hidden_layer_3 +1) * np.sqrt(1. / output_layer)
     }
     return network
 
@@ -56,15 +56,20 @@ def forward_feed(inputs):
     nn_state = {}
 
     nn_state['o0'] = inputs
+    #bias
+    nn_state['o0'] = np.append(nn_state['o0'], 1)
     
     nn_state['z1'] = np.matmul(nn['w0'], nn_state['o0'])
     nn_state['o1'] = sigmoid(nn_state['z1'], False)
+    nn_state['o1'] = np.append(nn_state['o1'], 1)
 
     nn_state['z2'] = np.matmul(nn['w1'], nn_state['o1'])
     nn_state['o2'] = sigmoid(nn_state['z2'], False)
+    nn_state['o2'] = np.append(nn_state['o2'], 1)
 
     nn_state['z3'] = np.matmul(nn['w2'], nn_state['o2'])
     nn_state['o3'] = sigmoid(nn_state['z3'], False)
+    nn_state['o3'] = np.append(nn_state['o3'], 1)
 
     nn_state['z4'] = np.matmul(nn['w3'], nn_state['o3'])
     nn_state['o4'] = softmax(nn_state['z4'], False)
@@ -75,16 +80,19 @@ def calculate_gradients(inputs, expected):
     nn_state = forward_feed(inputs)
 
     nn_state['g4'] = nn_state['o4'] - expected
-    nn_state['g3'] = np.matmul(nn_state['g4'], nn['w3']) * softmax(nn_state['z3'], derivative = True)
-    nn_state['g2'] = np.matmul(nn_state['g3'], nn['w2']) * sigmoid(nn_state['z2'], derivative = True)
-    nn_state['g1'] = np.matmul(nn_state['g2'], nn['w1']) * sigmoid(nn_state['z1'], derivative = True)
-    
+    nn_state['g3'] = np.matmul(nn_state['g4'], nn['w3'][:, 0:32]) * softmax(nn_state['z3'], derivative = True)
+    nn_state['g3'] = np.append(nn_state['g3'], np.matmul(nn_state['g4'], nn['w3'][:, [32]] * softmax(nn_state['o3'][32], derivative=True)))
+    nn_state['g2'] = np.matmul(nn_state['g3'][0:32], nn['w2'][0:32, 0:64]) * sigmoid(nn_state['z2'], derivative = True)
+    nn_state['g2'] = np.append(nn_state['g2'], np.matmul(nn_state['g3'][0:32], nn['w2'][0:32, [64]] * sigmoid(nn_state['o2'][64], derivative=True)))
+    nn_state['g1'] = np.matmul(nn_state['g2'][0:64], nn['w1'][0:64, 0:128]) * sigmoid(nn_state['z1'], derivative = True)
+    nn_state['g1'] = np.append(nn_state['g1'], np.matmul(nn_state['g2'][0:64], nn['w1'][0:64, [128]] * sigmoid(nn_state['o1'][128], derivative=True)))
     
 
+
     nn_state['D3'] = np.outer(nn_state['g4'], nn_state['o3'])
-    nn_state['D2'] = np.outer(nn_state['g3'], nn_state['o2'])
-    nn_state['D1'] = np.outer(nn_state['g2'], nn_state['o1'])
-    nn_state['D0'] = np.outer(nn_state['g1'], nn_state['o0'])
+    nn_state['D2'] = np.outer(nn_state['g3'][0:32], nn_state['o2'])
+    nn_state['D1'] = np.outer(nn_state['g2'][0:64], nn_state['o1'])
+    nn_state['D0'] = np.outer(nn_state['g1'][0:128], nn_state['o0'])
 
     return nn_state
 
@@ -97,10 +105,10 @@ def get_cost(outputs, expected_values):
 epochs = 200
 learning_rate = 0.005
 batch_size = 1
-#images = np.genfromtxt(sys.argv[1], delimiter=",")
-images = np.genfromtxt("./train_image.csv", delimiter=",")
-#labels = np.genfromtxt(sys.argv[2], delimiter="\n")
-labels = np.genfromtxt("./train_label.csv", delimiter="\n")
+images = np.genfromtxt(sys.argv[1], delimiter=",")
+#images = np.genfromtxt("./train_image.csv", delimiter=",")
+labels = np.genfromtxt(sys.argv[2], delimiter="\n")
+#labels = np.genfromtxt("./train_label.csv", delimiter="\n")
 print("TRAINING TRAINING TRAINING TRAINING TRAINING TRAINING TRAINING")
 accuracies = []
 
@@ -139,3 +147,12 @@ for e in range(epochs):
     print('cost:', cost, 'accuracy:', accuracy)
 pyplot.plot(accuracies)
 pyplot.show()
+
+images_test = np.genfromtxt(sys.argv[2], delimiter=",")
+predictions = []
+for input in images_test:
+    nn_state = forward_feed(input)
+    predictions.append(np.argmax(nn_state['o4']))
+
+predictions = np.asarray([predictions])
+np.savetxt("test_predictions.csv.", predictions, delimiter=",")
