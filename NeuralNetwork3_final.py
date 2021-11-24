@@ -93,19 +93,21 @@ def get_cost(outputs, expected_values):
 
 
 epochs = 200
-learning_rate = 0.001
-batch_size = 2
-#images = np.genfromtxt(sys.argv[1], delimiter=",")
-images = np.genfromtxt("./train_image.csv", delimiter=",")
-#labels = np.genfromtxt(sys.argv[2], delimiter="\n")
-labels = np.genfromtxt("./train_label.csv", delimiter="\n")
+learning_rate = 0.005
+batch_size = 10
+images = np.genfromtxt(sys.argv[1], delimiter=",")
+#images = np.genfromtxt("./train_image.csv", delimiter=",")
+labels = np.genfromtxt(sys.argv[2], delimiter="\n")
+#labels = np.genfromtxt("./train_label.csv", delimiter="\n")
 print("TRAINING TRAINING TRAINING TRAINING TRAINING TRAINING TRAINING")
 accuracies = []
+nn_state_aggregation = {}
 samples = random.sample(range(60000), 10000)
 
 for e in range(epochs):
     print('epoch', e)
     start_time = time.time()
+
     cost = 0
     num_correct = 0
     num_samples = 0
@@ -117,24 +119,37 @@ for e in range(epochs):
         expected_values = np.zeros(num_outputs)
         expected_values[int(label)] = 1
         nn_state = calculate_gradients(input, expected_values)
+        if num_samples % batch_size == 0:
+            nn_state_aggregation = dict(nn_state)
+        else:
+            for value1, value2 in zip(nn_state_aggregation.values(), nn_state.values()):
+                value1 += value2
         if (num_samples+1) % batch_size == 0:
+            # print(nn_state_aggregation)
             # update weights
-            nn['w0'] -= learning_rate * nn_state['D0']
-            nn['w1'] -= learning_rate * nn_state['D1']
-            nn['w2'] -= learning_rate * nn_state['D2']
+            for value in nn_state_aggregation.values():
+                value /= batch_size
+            nn['w0'] -= learning_rate * nn_state_aggregation['D0']
+            nn['w1'] -= learning_rate * nn_state_aggregation['D1']
+            nn['w2'] -= learning_rate * nn_state_aggregation['D2']
+            nn_state_aggregation = {}
         cost += get_cost(nn_state['o3'], expected_values)
 
         if np.argmax(nn_state['o3']) == np.argmax(expected_values):
             num_correct += 1
         num_samples += 1
 
-    print("time:", time.time() - start_time)
-
     cost /= len(samples)
-    #cost /= len(images)
     accuracy = num_correct / len(samples)
-    #accuracy = num_correct / len(images)
     accuracies.append(accuracy)
     print('cost:', cost, 'accuracy:', accuracy)
-pyplot.plot(accuracies)
-pyplot.show()
+
+images_test = np.genfromtxt(sys.argv[3], delimiter=",")
+#images_test = np.genfromtxt("./test_image.csv", delimiter=",")
+predictions = []
+for input in images_test:
+    nn_state = forward_feed(input)
+    predictions.append(np.argmax(nn_state['o4']))
+
+predictions = np.asarray([predictions])
+np.savetxt("test_predictions.csv.", predictions, delimiter=",")

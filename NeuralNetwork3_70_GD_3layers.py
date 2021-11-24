@@ -20,20 +20,23 @@ def initialize_network(sizes):
     input_layer = sizes[0]
     hidden_layer_1 = sizes[1]
     hidden_layer_2 = sizes[2]
-    output_layer = sizes[3]
+    hidden_layer_3 = sizes[3]
+    output_layer = sizes[4]
     network = {
         # dot after number: treat it like a float
         # add 1 for biases
         'w0': np.random.randn(hidden_layer_1, input_layer) * np.sqrt(1. / hidden_layer_1),
         'w1': np.random.randn(hidden_layer_2, hidden_layer_1) * np.sqrt(1. / hidden_layer_2),
-        'w2': np.random.randn(output_layer, hidden_layer_2) * np.sqrt(1. / output_layer)
+        'w2': np.random.randn(hidden_layer_3, hidden_layer_2) * np.sqrt(1. / hidden_layer_3),
+        'w3': np.random.randn(output_layer, hidden_layer_3) * np.sqrt(1. / output_layer)
+
     }
     return network
 
 
 num_inputs = 28*28
 num_outputs = 10
-layer_sizes = [num_inputs, 128, 64, num_outputs]
+layer_sizes = [num_inputs, 128, 64, 32, num_outputs]
 nn = initialize_network(layer_sizes)
 
 
@@ -64,7 +67,10 @@ def forward_feed(inputs):
     nn_state['o2'] = sigmoid(nn_state['z2'], False)
 
     nn_state['z3'] = np.matmul(nn['w2'], nn_state['o2'])
-    nn_state['o3'] = softmax(nn_state['z3'], False)
+    nn_state['o3'] = sigmoid(nn_state['z3'], False)
+
+    nn_state['z4'] = np.matmul(nn['w3'], nn_state['o3'])
+    nn_state['o4'] = softmax(nn_state['z4'], False)
 
     return nn_state
 
@@ -72,12 +78,15 @@ def forward_feed(inputs):
 def calculate_gradients(inputs, expected):
     nn_state = forward_feed(inputs)
 
-    nn_state['g3'] = nn_state['o3'] - expected
+    nn_state['g4'] = nn_state['o4'] - expected
+    nn_state['g3'] = np.matmul(nn_state['g4'], nn['w3']) * \
+        softmax(nn_state['z3'], derivative=True)
     nn_state['g2'] = np.matmul(nn_state['g3'], nn['w2']) * \
         softmax(nn_state['z2'], derivative=True)
     nn_state['g1'] = np.matmul(nn_state['g2'], nn['w1']) * \
         sigmoid(nn_state['z1'], derivative=True)
 
+    nn_state['D3'] = np.outer(nn_state['g4'], nn_state['o3'])
     nn_state['D2'] = np.outer(nn_state['g3'], nn_state['o2'])
     nn_state['D1'] = np.outer(nn_state['g2'], nn_state['o1'])
     nn_state['D0'] = np.outer(nn_state['g1'], nn_state['o0'])
@@ -85,27 +94,33 @@ def calculate_gradients(inputs, expected):
     return nn_state
 
 
-def get_cost(outputs, expected_values):
-    costs = []
-    for output, expected in zip(outputs, expected_values):
-        costs.append((1/2) * ((expected - output) ** 2))
-    return -sum(costs)
+def cross_entropy(o, y, derivative=False):
+    if derivative:
+        result = np.empty(len(o))
+        for result_value, output, expected in zip(result, o, y):
+            result_value = ((expected - output) / ((1-output) * output))
+        return result
+    else:
+        c = np.dot(y, np.log(o)) + np.dot((1 - y), np.log(1 - o))
+        return -c
 
 
 epochs = 200
 learning_rate = 0.001
-batch_size = 2
+batch_size = 10
 #images = np.genfromtxt(sys.argv[1], delimiter=",")
 images = np.genfromtxt("./train_image.csv", delimiter=",")
 #labels = np.genfromtxt(sys.argv[2], delimiter="\n")
 labels = np.genfromtxt("./train_label.csv", delimiter="\n")
 print("TRAINING TRAINING TRAINING TRAINING TRAINING TRAINING TRAINING")
 accuracies = []
+nn_state_aggregation = {}
 samples = random.sample(range(60000), 10000)
 
 for e in range(epochs):
     print('epoch', e)
     start_time = time.time()
+    #samples_batch = random.sample(range(10000), batch_size)
     cost = 0
     num_correct = 0
     num_samples = 0
@@ -117,24 +132,31 @@ for e in range(epochs):
         expected_values = np.zeros(num_outputs)
         expected_values[int(label)] = 1
         nn_state = calculate_gradients(input, expected_values)
+        if num_samples % batch_size == 0:
+            nn_state_aggregation = dict(nn_state)
+        else:
+            for value1, value2 in zip(nn_state_aggregation.values(), nn_state.values()):
+                value1 += value2
         if (num_samples+1) % batch_size == 0:
+            # print(nn_state_aggregation)
             # update weights
-            nn['w0'] -= learning_rate * nn_state['D0']
-            nn['w1'] -= learning_rate * nn_state['D1']
-            nn['w2'] -= learning_rate * nn_state['D2']
-        cost += get_cost(nn_state['o3'], expected_values)
+            for value in nn_state_aggregation.values():
+                value /= batch_size
+            nn['w0'] -= learning_rate * nn_state_aggregation['D0']
+            nn['w1'] -= learning_rate * nn_state_aggregation['D1']
+            nn['w2'] -= learning_rate * nn_state_aggregation['D2']
+            nn['w3'] -= learning_rate * nn_state_aggregation['D3']
+            nn_state_aggregation = {}
+        cost += cross_entropy(nn_state['o4'], expected_values, False)
 
-        if np.argmax(nn_state['o3']) == np.argmax(expected_values):
+        if np.argmax(nn_state['o4']) == np.argmax(expected_values):
             num_correct += 1
         num_samples += 1
 
-    print("time:", time.time() - start_time)
-
     cost /= len(samples)
-    #cost /= len(images)
     accuracy = num_correct / len(samples)
-    #accuracy = num_correct / len(images)
     accuracies.append(accuracy)
     print('cost:', cost, 'accuracy:', accuracy)
+
 pyplot.plot(accuracies)
 pyplot.show()

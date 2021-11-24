@@ -145,20 +145,19 @@ def get_cost(outputs, expected_values):
 
 
 epochs = 200
-learning_rate = 0.005
-batch_size = 1
+learning_rate = 0.001
+batch_size = 500
 #images = np.genfromtxt(sys.argv[1], delimiter=",")
 images = np.genfromtxt("./train_image.csv", delimiter=",")
 #labels = np.genfromtxt(sys.argv[2], delimiter="\n")
 labels = np.genfromtxt("./train_label.csv", delimiter="\n")
 print("TRAINING TRAINING TRAINING TRAINING TRAINING TRAINING TRAINING")
 accuracies = []
-
+samples = random.sample(range(60000), 10000)
 
 for e in range(epochs):
     print('epoch', e)
     start_time = time.time()
-    samples = random.sample(range(60000), 10000)
     cost = 0
     num_correct = 0
     num_samples = 0

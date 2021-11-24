@@ -38,7 +38,7 @@ def initialize_network(sizes):
 
 num_inputs = 28*28
 num_outputs = 10
-layer_sizes = [num_inputs, 128, 64, 32, num_outputs]
+layer_sizes = [num_inputs, 16, 8, 4, num_outputs]
 nn = initialize_network(layer_sizes)
 
 
@@ -103,22 +103,22 @@ def calculate_gradients(inputs, expected):
     nn_state['g4'] = nn_state['o4'] - expected
     #nn_state['g4'] = cross_entropy(nn_state['o4'], expected, derivative=True)
     nn_state['g3'] = np.matmul(
-        nn_state['g4'], nn['w3'][:, 0:32]) * softmax(nn_state['z3'], derivative=True)
+        nn_state['g4'], nn['w3'][:, 0:4]) * softmax(nn_state['z3'], derivative=True)
     nn_state['g3'] = np.append(nn_state['g3'], np.matmul(
-        nn_state['g4'], nn['w3'][:, [32]] * softmax(nn_state['o3'][32], derivative=True)))
-    nn_state['g2'] = np.matmul(nn_state['g3'][0:32], nn['w2']
-                               [0:32, 0:64]) * sigmoid(nn_state['z2'], derivative=True)
+        nn_state['g4'], nn['w3'][:, [4]] * softmax(nn_state['o3'][4], derivative=True)))
+    nn_state['g2'] = np.matmul(nn_state['g3'][0:4], nn['w2']
+                               [0:4, 0:8]) * sigmoid(nn_state['z2'], derivative=True)
     nn_state['g2'] = np.append(nn_state['g2'], np.matmul(
-        nn_state['g3'][0:32], nn['w2'][0:32, [64]] * sigmoid(nn_state['o2'][64], derivative=True)))
-    nn_state['g1'] = np.matmul(nn_state['g2'][0:64], nn['w1']
-                               [0:64, 0:128]) * sigmoid(nn_state['z1'], derivative=True)
-    nn_state['g1'] = np.append(nn_state['g1'], np.matmul(nn_state['g2'][0:64], nn['w1'][0:64, [
-                               128]] * sigmoid(nn_state['o1'][128], derivative=True)))
+        nn_state['g3'][0:4], nn['w2'][0:4, [8]] * sigmoid(nn_state['o2'][8], derivative=True)))
+    nn_state['g1'] = np.matmul(nn_state['g2'][0:8], nn['w1']
+                               [0:8, 0:16]) * sigmoid(nn_state['z1'], derivative=True)
+    nn_state['g1'] = np.append(nn_state['g1'], np.matmul(nn_state['g2'][0:8], nn['w1'][0:8, [
+                               16]] * sigmoid(nn_state['o1'][16], derivative=True)))
 
     nn_state['D3'] = np.outer(nn_state['g4'], nn_state['o3'])
-    nn_state['D2'] = np.outer(nn_state['g3'][0:32], nn_state['o2'])
-    nn_state['D1'] = np.outer(nn_state['g2'][0:64], nn_state['o1'])
-    nn_state['D0'] = np.outer(nn_state['g1'][0:128], nn_state['o0'])
+    nn_state['D2'] = np.outer(nn_state['g3'][0:4], nn_state['o2'])
+    nn_state['D1'] = np.outer(nn_state['g2'][0:8], nn_state['o1'])
+    nn_state['D0'] = np.outer(nn_state['g1'][0:16], nn_state['o0'])
 
     return nn_state
 
@@ -132,19 +132,19 @@ def get_cost(outputs, expected_values):
 
 epochs = 200
 learning_rate = 0.001
-batch_size = 100
+batch_size = 2
 # images = np.genfromtxt(sys.argv[1], delimiter=",")
 images = np.genfromtxt("./train_image.csv", delimiter=",")
 # labels = np.genfromtxt(sys.argv[2], delimiter="\n")
 labels = np.genfromtxt("./train_label.csv", delimiter="\n")
 print("TRAINING TRAINING TRAINING TRAINING TRAINING TRAINING TRAINING")
 accuracies = []
+samples = random.sample(range(60000), 10000)
 
 nn_state_aggregation = {}
 for e in range(epochs):
     print('epoch', e)
     start_time = time.time()
-    samples = random.sample(range(60000), 10000)
     cost = 0
     num_correct = 0
     num_samples = 0
@@ -156,11 +156,11 @@ for e in range(epochs):
         expected_values = np.zeros(num_outputs)
         expected_values[int(label)] = 1
         nn_state = calculate_gradients(input, expected_values)
-        if num_samples == 0:
+        if num_samples % batch_size == 0:
             nn_state_aggregation = dict(nn_state)
         else:
-            for value1, value2 in zip(nn_state.values(), nn_state_aggregation.values()):
-                value2 += value1
+            for value1, value2 in zip(nn_state_aggregation.values(), nn_state.values()):
+                value1 += value2
         if (num_samples+1) % batch_size == 0:
             # update weights
             for value in nn_state_aggregation.values():
@@ -170,7 +170,6 @@ for e in range(epochs):
             nn['w2'] -= learning_rate * nn_state_aggregation['D2']
             nn['w3'] -= learning_rate * nn_state_aggregation['D3']
             nn_state_aggregation = {}
-            num_samples = -1
         cost += cross_entropy(nn_state['o4'], expected_values)
 
         if np.argmax(nn_state['o4']) == np.argmax(expected_values):
@@ -183,8 +182,8 @@ for e in range(epochs):
     accuracy = num_correct / len(samples)
     accuracies.append(accuracy)
     print('cost:', cost, 'accuracy:', accuracy)
-    pyplot.plot(accuracies)
-    pyplot.show()
+pyplot.plot(accuracies)
+pyplot.show()
 
 # images_test = np.genfromtxt(sys.argv[3], delimiter=",")
 images_test = np.genfromtxt("./test_image.csv", delimiter=",")

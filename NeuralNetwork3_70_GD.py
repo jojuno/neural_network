@@ -33,7 +33,7 @@ def initialize_network(sizes):
 
 num_inputs = 28*28
 num_outputs = 10
-layer_sizes = [num_inputs, 128, 64, num_outputs]
+layer_sizes = [num_inputs, 256, 128, num_outputs]
 nn = initialize_network(layer_sizes)
 
 
@@ -92,21 +92,22 @@ def get_cost(outputs, expected_values):
     return -sum(costs)
 
 
-epochs = 200
-learning_rate = 0.0001
-batch_size = 1
-#images = np.genfromtxt(sys.argv[1], delimiter=",")
-images = np.genfromtxt("./train_image.csv", delimiter=",")
-#labels = np.genfromtxt(sys.argv[2], delimiter="\n")
-labels = np.genfromtxt("./train_label.csv", delimiter="\n")
+epochs = 50
+learning_rate = 0.005
+batch_size = 10
+images = np.genfromtxt(sys.argv[1], delimiter=",")
+#images = np.genfromtxt("./train_image.csv", delimiter=",")
+labels = np.genfromtxt(sys.argv[2], delimiter="\n")
+#labels = np.genfromtxt("./train_label.csv", delimiter="\n")
 print("TRAINING TRAINING TRAINING TRAINING TRAINING TRAINING TRAINING")
 accuracies = []
 nn_state_aggregation = {}
+samples = random.sample(range(60000), 10000)
 
 for e in range(epochs):
     print('epoch', e)
     start_time = time.time()
-    samples = random.sample(range(60000), 10000)
+
     cost = 0
     num_correct = 0
     num_samples = 0
@@ -141,6 +142,6 @@ for e in range(epochs):
     cost /= len(samples)
     accuracy = num_correct / len(samples)
     accuracies.append(accuracy)
-    pyplot.plot(accuracies)
-    pyplot.show()
     print('cost:', cost, 'accuracy:', accuracy)
+pyplot.plot(accuracies)
+pyplot.show()
