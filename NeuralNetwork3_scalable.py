@@ -98,7 +98,7 @@ def calculate_gradients(inputs, biases, expected):
 
 epochs = 50
 learning_rate = 0.2
-learning_adjust_epoch = 22
+learning_adjust_epoch = 25
 learning_adjust_rate = 0.002
 #images = np.genfromtxt("./train_image.csv", delimiter=",")
 images = np.genfromtxt(sys.argv[1], delimiter=",")
@@ -111,7 +111,7 @@ print("learning_rate", learning_rate, "batch_size SGD", "layer_sizes",
 for e in range(epochs):
     #stabilize because accuracy tends to go above threshold at this point, and drop if not adjusted
     if e == learning_adjust_epoch:
-        learning_adjust_rate = learning_adjust_rate
+        learning_rate = learning_adjust_rate
     print('epoch', e)
     start_time = time.time()
     cost = 0
@@ -135,6 +135,7 @@ for e in range(epochs):
 
     accuracy = num_correct / 10000
     accuracies.append(accuracy)
+    print('accuracy:', accuracy)
 
     
 end_time = time.time()
@@ -144,6 +145,6 @@ images_test = np.genfromtxt(sys.argv[3], delimiter=",")
 predictions = []
 for input in images_test:
     input = (input / 255).astype('float32')
-    nn_state = forward_feed(input)
+    nn_state = forward_feed(input, biases)
     predictions.append(np.argmax(nn_state['o4']))
 np.savetxt("test_predictions.csv", predictions, delimiter=",")
