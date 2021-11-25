@@ -102,7 +102,7 @@ labels = np.genfromtxt(sys.argv[2], delimiter="\n")
 print("TRAINING TRAINING TRAINING TRAINING TRAINING TRAINING TRAINING")
 accuracies = []
 nn_state_aggregation = {}
-samples = random.sample(range(60000), 10000)
+#samples = random.sample(range(60000), 10000)
 
 for e in range(epochs):
     print('epoch', e)
@@ -111,7 +111,8 @@ for e in range(epochs):
     cost = 0
     num_correct = 0
     num_samples = 0
-    for i in samples:
+    # index bounds: [0, 10000)
+    for i in range(10000):
         input = images[i]
         # normalize input
         input = (input / 255).astype('float32')
@@ -139,8 +140,8 @@ for e in range(epochs):
             num_correct += 1
         num_samples += 1
 
-    cost /= len(samples)
-    accuracy = num_correct / len(samples)
+    cost /= 10000
+    accuracy = num_correct / 10000
     accuracies.append(accuracy)
     print('cost:', cost, 'accuracy:', accuracy)
 
@@ -149,7 +150,7 @@ images_test = np.genfromtxt(sys.argv[3], delimiter=",")
 predictions = []
 for input in images_test:
     nn_state = forward_feed(input)
-    predictions.append(np.argmax(nn_state['o4']))
+    predictions.append(np.argmax(nn_state['o3']))
 
 predictions = np.asarray([predictions])
 np.savetxt("test_predictions.csv.", predictions, delimiter=",")

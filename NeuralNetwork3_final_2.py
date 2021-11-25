@@ -66,8 +66,8 @@ def cross_entropy(o, y, derivative=False):
         return -c
 
 
-bias_0 = 5
-bias_1 = 3
+bias_0 = 3
+bias_1 = 2
 bias_2 = 1
 
 
@@ -120,7 +120,7 @@ def get_cost(outputs, expected_values):
     return -sum(costs)
 
 
-epochs = 50
+epochs = 1
 learning_rate = 0.01
 batch_size = 1
 #images = np.genfromtxt(sys.argv[1], delimiter=",")
@@ -129,7 +129,8 @@ images = np.genfromtxt("./train_image.csv", delimiter=",")
 labels = np.genfromtxt("./train_label.csv", delimiter="\n")
 print("TRAINING TRAINING TRAINING TRAINING TRAINING TRAINING TRAINING")
 accuracies = []
-samples = random.sample(range(60000), 10000)
+#samples = random.sample(range(60000), 10000)
+#samples = 10000
 nn_state_aggregation = {}
 
 print("learning_rate", learning_rate, "batch_size", batch_size, "layer_sizes:",
@@ -140,7 +141,7 @@ for e in range(epochs):
     cost = 0
     num_correct = 0
     num_samples = 0
-    for i in samples:
+    for i in range(10000):
         input = images[i]
         # normalize input
         input = (input / 255).astype('float32')
@@ -169,8 +170,8 @@ for e in range(epochs):
 
     print("time:", time.time() - start_time)
 
-    cost /= len(samples)
-    accuracy = num_correct / len(samples)
+    cost /= 10000
+    accuracy = num_correct / 10000
     accuracies.append(accuracy)
     print('cost:', cost, 'accuracy:', accuracy)
 pyplot.plot(accuracies)
@@ -184,14 +185,4 @@ for input in images_test:
     predictions.append(np.argmax(nn_state['o3']))
 
 predictions = np.asarray([predictions])
-np.savetxt("test_predictions.csv", predictions, delimiter=",")
-
-
-answers = np.genfromtxt("./test_label.csv", delimiter=",")
-#labels = np.genfromtxt(sys.argv[2], delimiter="\n")
-predictions = np.genfromtxt("./test_predictions.csv", delimiter=",")
-num_correct_test = 0
-for i in range(10000):
-    if answers[i] == predictions[i]:
-        num_correct_test += 1
-print("accuracy on test set:", num_correct_test / 10000)
+np.savetxt("test_predictions.csv.", predictions, delimiter=",")

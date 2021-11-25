@@ -18,6 +18,10 @@ import matplotlib.pyplot as pyplot
 # forward pass for a batch
 # aggregate errors and back propagate once
 
+#average of time range and accuracy (range, well above 90)
+
+start_time = time.perf_counter ()
+
 
 def initialize_network(sizes):
     input_layer = sizes[0]
@@ -27,15 +31,18 @@ def initialize_network(sizes):
     network = {
         # dot after number: treat it like a float
         # add 1 for biases
-        'w0': np.random.randn(hidden_layer_1, input_layer + 1) * np.sqrt(1. / hidden_layer_1),
-        'w1': np.random.randn(hidden_layer_2, hidden_layer_1 + 1) * np.sqrt(1. / hidden_layer_2),
-        'w2': np.random.randn(output_layer, hidden_layer_2 + 1) * np.sqrt(1. / output_layer)
+        'w0': np.random.randn(hidden_layer_1, input_layer + 1) * np.sqrt(5. / hidden_layer_1),
+        'w1': np.random.randn(hidden_layer_2, hidden_layer_1 + 1) * np.sqrt(5. / hidden_layer_2),
+        'w2': np.random.randn(output_layer, hidden_layer_2 + 1) * np.sqrt(5. / output_layer)
     }
+    #network['w0'].append(np.random.rand(output_num, 1))
+
     return network
 
 
 num_inputs = 28*28
 num_outputs = 10
+#less nodes
 layer_sizes = [num_inputs, 128, 64, num_outputs]
 nn = initialize_network(layer_sizes)
 
@@ -95,8 +102,8 @@ def forward_feed(inputs):
 def calculate_gradients(inputs, expected):
     nn_state = forward_feed(inputs)
 
-    nn_state['g3'] = nn_state['o3'] - expected
-    #nn_state['g'] = cross_entropy(nn_state['o4'], expected, derivative=True)
+    #nn_state['g3'] = nn_state['o3'] - expected
+    nn_state['g3'] = cross_entropy(nn_state['o3'], expected, derivative=True)
     nn_state['g2'] = np.matmul(
         nn_state['g3'], nn['w2'][:, 0:64]) * softmax(nn_state['z2'], derivative=True)
     nn_state['g2'] = np.append(nn_state['g2'], np.matmul(
@@ -113,15 +120,8 @@ def calculate_gradients(inputs, expected):
     return nn_state
 
 
-def get_cost(outputs, expected_values):
-    costs = []
-    for output, expected in zip(outputs, expected_values):
-        costs.append((1/2) * ((expected - output) ** 2))
-    return -sum(costs)
-
-
-epochs = 50
-learning_rate = 0.01
+epochs = 100
+learning_rate = 0.005
 batch_size = 1
 #images = np.genfromtxt(sys.argv[1], delimiter=",")
 images = np.genfromtxt("./train_image.csv", delimiter=",")
@@ -129,7 +129,8 @@ images = np.genfromtxt("./train_image.csv", delimiter=",")
 labels = np.genfromtxt("./train_label.csv", delimiter="\n")
 print("TRAINING TRAINING TRAINING TRAINING TRAINING TRAINING TRAINING")
 accuracies = []
-samples = random.sample(range(60000), 10000)
+#samples = random.sample(range(60000), 10000)
+samples = range(10000)
 nn_state_aggregation = {}
 
 print("learning_rate", learning_rate, "batch_size", batch_size, "layer_sizes:",
@@ -161,18 +162,22 @@ for e in range(epochs):
             nn['w1'] -= learning_rate * nn_state_aggregation['D1']
             nn['w2'] -= learning_rate * nn_state_aggregation['D2']
             nn_state_aggregation = {}
-            cost += cross_entropy(nn_state['o3'], expected_values)
+            
 
         if np.argmax(nn_state['o3']) == np.argmax(expected_values):
             num_correct += 1
         num_samples += 1
 
-    print("time:", time.time() - start_time)
+    #print("time:", time.time() - start_time)
 
-    cost /= len(samples)
     accuracy = num_correct / len(samples)
     accuracies.append(accuracy)
     print('cost:', cost, 'accuracy:', accuracy)
+
+    
+end_time = time.perf_counter ()
+print(end_time - start_time, "seconds")
+
 pyplot.plot(accuracies)
 pyplot.show()
 
@@ -185,13 +190,3 @@ for input in images_test:
 
 predictions = np.asarray([predictions])
 np.savetxt("test_predictions.csv", predictions, delimiter=",")
-
-
-answers = np.genfromtxt("./test_label.csv", delimiter=",")
-#labels = np.genfromtxt(sys.argv[2], delimiter="\n")
-predictions = np.genfromtxt("./test_predictions.csv", delimiter=",")
-num_correct_test = 0
-for i in range(10000):
-    if answers[i] == predictions[i]:
-        num_correct_test += 1
-print("accuracy on test set:", num_correct_test / 10000)

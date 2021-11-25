@@ -1,0 +1,203 @@
+learning_rate 0.003 batch_size 1 layer_sizes: [784, 128, 64, 10] bias_0: 5 bias_1: 3 bias_2: 1
+np.sqrt(4 / ....)
+epoch 0
+cost: 3.118074030942129 accuracy: 0.2674
+epoch 1
+cost: 2.602334982614295 accuracy: 0.4791
+epoch 2
+cost: 2.3837286431935487 accuracy: 0.5626
+epoch 3
+cost: 2.251809942100097 accuracy: 0.604
+epoch 4
+cost: 2.185580153309085 accuracy: 0.631
+epoch 5
+cost: 2.153291273429527 accuracy: 0.6473
+epoch 6
+cost: 2.128682121985967 accuracy: 0.6511
+epoch 7
+cost: 2.094271691806359 accuracy: 0.6573
+epoch 8
+cost: 2.0428986087387573 accuracy: 0.6698
+epoch 9
+cost: 1.9820443711346143 accuracy: 0.6877
+epoch 10
+cost: 1.919790113431357 accuracy: 0.706
+epoch 11
+cost: 1.861387265346635 accuracy: 0.72
+epoch 12
+cost: 1.8069702179880796 accuracy: 0.731
+epoch 13
+cost: 1.753453903316348 accuracy: 0.741
+epoch 14
+cost: 1.6991089047753805 accuracy: 0.7506
+epoch 15
+cost: 1.644289541000473 accuracy: 0.7588
+epoch 16
+cost: 1.5902657812566237 accuracy: 0.7665
+epoch 17
+cost: 1.5382610838227897 accuracy: 0.7724
+epoch 18
+cost: 1.4894813832268934 accuracy: 0.7785
+epoch 19
+cost: 1.445082188826749 accuracy: 0.7848
+epoch 20
+cost: 1.4056590069426322 accuracy: 0.7874
+epoch 21
+cost: 1.3706002169798637 accuracy: 0.7941
+epoch 22
+cost: 1.33809372560851 accuracy: 0.7997
+epoch 23
+cost: 1.306589929263529 accuracy: 0.8049
+epoch 24
+cost: 1.2758013693640253 accuracy: 0.8081
+epoch 25
+cost: 1.2460462634672855 accuracy: 0.8124
+epoch 26
+cost: 1.217646039843745 accuracy: 0.8169
+epoch 27
+cost: 1.1908090799293294 accuracy: 0.8195
+epoch 28
+cost: 1.1656531020666447 accuracy: 0.8231
+epoch 29
+cost: 1.142237148089479 accuracy: 0.8258
+epoch 30
+cost: 1.1205875137921408 accuracy: 0.8287
+epoch 31
+cost: 1.1007107469337118 accuracy: 0.8308
+epoch 32
+cost: 1.082591198617099 accuracy: 0.8334
+epoch 33
+cost: 1.0661787744182663 accuracy: 0.8348
+epoch 34
+cost: 1.051373688455536 accuracy: 0.837
+epoch 35
+cost: 1.038015935015226 accuracy: 0.8369
+epoch 36
+cost: 1.025890226474089 accuracy: 0.8373
+epoch 37
+cost: 1.0147525960739434 accuracy: 0.8374
+epoch 38
+cost: 1.0043685661717436 accuracy: 0.8378
+epoch 39
+cost: 0.9945425737739473 accuracy: 0.8383
+epoch 40
+cost: 0.9851327754650318 accuracy: 0.8376
+epoch 41
+cost: 0.9760584539669271 accuracy: 0.8382
+epoch 42
+cost: 0.9672938791590449 accuracy: 0.8393
+epoch 43
+cost: 0.958843960386875 accuracy: 0.8401
+epoch 44
+cost: 0.9507177549923683 accuracy: 0.8413
+epoch 45
+cost: 0.9429150788392672 accuracy: 0.8426
+epoch 46
+cost: 0.935426116525335 accuracy: 0.844
+epoch 47
+cost: 0.9282362944091337 accuracy: 0.8453
+epoch 48
+cost: 0.921330495031859 accuracy: 0.8461
+epoch 49
+cost: 0.9146941266465436 accuracy: 0.8475
+epoch 50
+cost: 0.9083084774804613 accuracy: 0.848
+epoch 51
+cost: 0.9021371894946051 accuracy: 0.8502
+epoch 52
+cost: 0.8961118400669158 accuracy: 0.851
+epoch 53
+cost: 0.8901444367050785 accuracy: 0.8515
+epoch 54
+cost: 0.8841748229984782 accuracy: 0.8533
+epoch 55
+cost: 0.878201523364435 accuracy: 0.8543
+epoch 56
+cost: 0.8722600569939043 accuracy: 0.8549
+epoch 57
+cost: 0.8663886747397628 accuracy: 0.856
+epoch 58
+cost: 0.8606162265744371 accuracy: 0.8566
+epoch 59
+cost: 0.8549641636671935 accuracy: 0.8578
+epoch 60
+cost: 0.8494493697853218 accuracy: 0.8586
+epoch 61
+cost: 0.8440847385256975 accuracy: 0.8594
+epoch 62
+cost: 0.8388787319167615 accuracy: 0.8604
+epoch 63
+cost: 0.8338348881535971 accuracy: 0.8613
+epoch 64
+cost: 0.8289514835089602 accuracy: 0.8627
+epoch 65
+cost: 0.8242216310155791 accuracy: 0.8632
+epoch 66
+cost: 0.8196344167751677 accuracy: 0.8639
+epoch 67
+cost: 0.8151770611338613 accuracy: 0.865
+epoch 68
+cost: 0.8108369571517281 accuracy: 0.8662
+epoch 69
+cost: 0.8066025358068897 accuracy: 0.8664
+epoch 70
+cost: 0.8024631707623266 accuracy: 0.8674
+epoch 71
+cost: 0.798409170300806 accuracy: 0.8686
+epoch 72
+cost: 0.7944326456224265 accuracy: 0.8695
+epoch 73
+cost: 0.7905287592498521 accuracy: 0.8707
+epoch 74
+cost: 0.7866956832842917 accuracy: 0.872
+epoch 75
+cost: 0.7829327203954224 accuracy: 0.8735
+epoch 76
+cost: 0.7792382763168471 accuracy: 0.8742
+epoch 77
+cost: 0.7756092604196323 accuracy: 0.8746
+epoch 78
+cost: 0.7720417497081332 accuracy: 0.8748
+epoch 79
+cost: 0.7685319389052474 accuracy: 0.8751
+epoch 80
+cost: 0.7650767166725213 accuracy: 0.8763
+epoch 81
+cost: 0.7616737427640287 accuracy: 0.8774
+epoch 82
+cost: 0.7583211872269703 accuracy: 0.8784
+epoch 83
+cost: 0.7550173386396386 accuracy: 0.8788
+epoch 84
+cost: 0.7517602528751528 accuracy: 0.8792
+epoch 85
+cost: 0.7485475839848914 accuracy: 0.8797
+epoch 86
+cost: 0.7453766896338921 accuracy: 0.8799
+epoch 87
+cost: 0.7422450018397105 accuracy: 0.8805
+epoch 88
+cost: 0.7391505366478675 accuracy: 0.8803
+epoch 89
+cost: 0.7360923572351464 accuracy: 0.8816
+epoch 90
+cost: 0.7330708393299536 accuracy: 0.8823
+epoch 91
+cost: 0.7300876852780087 accuracy: 0.8835
+epoch 92
+cost: 0.7271457295605012 accuracy: 0.8842
+epoch 93
+cost: 0.7242486292385585 accuracy: 0.885
+epoch 94
+cost: 0.7214005341904594 accuracy: 0.8856
+epoch 95
+cost: 0.7186058054518631 accuracy: 0.8859
+epoch 96
+cost: 0.7158688164614816 accuracy: 0.8867
+epoch 97
+cost: 0.7131938414941805 accuracy: 0.8872
+epoch 98
+cost: 0.710585009074895 accuracy: 0.8877
+epoch 99
+cost: 0.7080462733702586 accuracy: 0.8884
+-1637744879.5085654 seconds

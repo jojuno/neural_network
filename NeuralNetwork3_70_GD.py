@@ -92,8 +92,8 @@ def get_cost(outputs, expected_values):
     return -sum(costs)
 
 
-epochs = 50
-learning_rate = 0.005
+epochs = 200
+learning_rate = 0.003
 batch_size = 10
 images = np.genfromtxt(sys.argv[1], delimiter=",")
 #images = np.genfromtxt("./train_image.csv", delimiter=",")

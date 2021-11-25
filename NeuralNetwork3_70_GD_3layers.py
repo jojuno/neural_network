@@ -36,7 +36,7 @@ def initialize_network(sizes):
 
 num_inputs = 28*28
 num_outputs = 10
-layer_sizes = [num_inputs, 128, 64, 32, num_outputs]
+layer_sizes = [num_inputs, 5, 4, 3, num_outputs]
 nn = initialize_network(layer_sizes)
 
 
@@ -79,12 +79,9 @@ def calculate_gradients(inputs, expected):
     nn_state = forward_feed(inputs)
 
     nn_state['g4'] = nn_state['o4'] - expected
-    nn_state['g3'] = np.matmul(nn_state['g4'], nn['w3']) * \
-        softmax(nn_state['z3'], derivative=True)
-    nn_state['g2'] = np.matmul(nn_state['g3'], nn['w2']) * \
-        softmax(nn_state['z2'], derivative=True)
-    nn_state['g1'] = np.matmul(nn_state['g2'], nn['w1']) * \
-        sigmoid(nn_state['z1'], derivative=True)
+    nn_state['g3'] = np.matmul(nn_state['g4'], nn['w3']) * softmax(nn_state['z3'], derivative=True)
+    nn_state['g2'] = np.matmul(nn_state['g3'], nn['w2']) * softmax(nn_state['z2'], derivative=True)
+    nn_state['g1'] = np.matmul(nn_state['g2'], nn['w1']) * sigmoid(nn_state['z1'], derivative=True)
 
     nn_state['D3'] = np.outer(nn_state['g4'], nn_state['o3'])
     nn_state['D2'] = np.outer(nn_state['g3'], nn_state['o2'])
@@ -107,7 +104,7 @@ def cross_entropy(o, y, derivative=False):
 
 epochs = 200
 learning_rate = 0.001
-batch_size = 10
+batch_size = 500
 #images = np.genfromtxt(sys.argv[1], delimiter=",")
 images = np.genfromtxt("./train_image.csv", delimiter=",")
 #labels = np.genfromtxt(sys.argv[2], delimiter="\n")
@@ -160,3 +157,13 @@ for e in range(epochs):
 
 pyplot.plot(accuracies)
 pyplot.show()
+
+images_test = np.genfromtxt(sys.argv[3], delimiter=",")
+#images_test = np.genfromtxt("./test_image.csv", delimiter=",")
+predictions = []
+for input in images_test:
+    nn_state = forward_feed(input)
+    predictions.append(np.argmax(nn_state['o3']))
+
+predictions = np.asarray([predictions])
+np.savetxt("test_predictions.csv", predictions, delimiter=",")

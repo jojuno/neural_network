@@ -36,7 +36,7 @@ def initialize_network(sizes):
 
 num_inputs = 28*28
 num_outputs = 10
-layer_sizes = [num_inputs, 128, 64, num_outputs]
+layer_sizes = [num_inputs, 64, 32, num_outputs]
 nn = initialize_network(layer_sizes)
 
 
@@ -66,8 +66,8 @@ def cross_entropy(o, y, derivative=False):
         return -c
 
 
-bias_0 = 5
-bias_1 = 3
+bias_0 = 3
+bias_1 = 2
 bias_2 = 1
 
 
@@ -98,17 +98,17 @@ def calculate_gradients(inputs, expected):
     nn_state['g3'] = nn_state['o3'] - expected
     #nn_state['g'] = cross_entropy(nn_state['o4'], expected, derivative=True)
     nn_state['g2'] = np.matmul(
-        nn_state['g3'], nn['w2'][:, 0:64]) * softmax(nn_state['z2'], derivative=True)
+        nn_state['g3'], nn['w2'][:, 0:32]) * softmax(nn_state['z2'], derivative=True)
     nn_state['g2'] = np.append(nn_state['g2'], np.matmul(
-        nn_state['g3'], nn['w2'][:, [64]] * softmax(nn_state['o2'][64], derivative=True)))
-    nn_state['g1'] = np.matmul(nn_state['g2'][0:64], nn['w1']
-                               [0:64, 0:128]) * sigmoid(nn_state['z1'], derivative=True)
+        nn_state['g3'], nn['w2'][:, [32]] * softmax(nn_state['o2'][32], derivative=True)))
+    nn_state['g1'] = np.matmul(nn_state['g2'][0:32], nn['w1']
+                               [0:32, 0:64]) * sigmoid(nn_state['z1'], derivative=True)
     nn_state['g1'] = np.append(nn_state['g1'], np.matmul(
-        nn_state['g2'][0:64], nn['w1'][0:64, [128]] * sigmoid(nn_state['o1'][128], derivative=True)))
+        nn_state['g2'][0:32], nn['w1'][0:32, [64]] * sigmoid(nn_state['o1'][64], derivative=True)))
 
     nn_state['D2'] = np.outer(nn_state['g3'], nn_state['o2'])
-    nn_state['D1'] = np.outer(nn_state['g2'][0:64], nn_state['o1'])
-    nn_state['D0'] = np.outer(nn_state['g1'][0:128], nn_state['o0'])
+    nn_state['D1'] = np.outer(nn_state['g2'][0:32], nn_state['o1'])
+    nn_state['D0'] = np.outer(nn_state['g1'][0:64], nn_state['o0'])
 
     return nn_state
 
@@ -120,8 +120,8 @@ def get_cost(outputs, expected_values):
     return -sum(costs)
 
 
-epochs = 50
-learning_rate = 0.01
+epochs = 200
+learning_rate = 0.007
 batch_size = 1
 #images = np.genfromtxt(sys.argv[1], delimiter=",")
 images = np.genfromtxt("./train_image.csv", delimiter=",")
@@ -129,24 +129,26 @@ images = np.genfromtxt("./train_image.csv", delimiter=",")
 labels = np.genfromtxt("./train_label.csv", delimiter="\n")
 print("TRAINING TRAINING TRAINING TRAINING TRAINING TRAINING TRAINING")
 accuracies = []
-samples = random.sample(range(60000), 10000)
+#samples = random.sample(range(60000), 10000)
 nn_state_aggregation = {}
 
-print("learning_rate", learning_rate, "batch_size", batch_size, "layer_sizes:",
-      layer_sizes, "bias_0:", bias_0, "bias_1:", bias_1, "bias_2:", bias_2)
+print("learning_rate", learning_rate, "batch_size", batch_size, "layer sizes:",
+      layer_sizes, "bias_0:", bias_0, "bias_1: ", bias_1, "bias_2: ", bias_2)
 for e in range(epochs):
     print('epoch', e)
     start_time = time.time()
     cost = 0
     num_correct = 0
     num_samples = 0
-    for i in samples:
+    for i in range(10000):
         input = images[i]
         # normalize input
         input = (input / 255).astype('float32')
         label = labels[i]
         expected_values = np.zeros(num_outputs)
         expected_values[int(label)] = 1
+        #nn_state = forward_feed(expected_values)
+
         nn_state = calculate_gradients(input, expected_values)
         if num_samples % batch_size == 0:
             nn_state_aggregation = dict(nn_state)
@@ -169,12 +171,12 @@ for e in range(epochs):
 
     print("time:", time.time() - start_time)
 
-    cost /= len(samples)
+    cost /= len(samples/batch_size)
     accuracy = num_correct / len(samples)
     accuracies.append(accuracy)
     print('cost:', cost, 'accuracy:', accuracy)
-pyplot.plot(accuracies)
-pyplot.show()
+# pyplot.plot(accuracies)
+# pyplot.show()
 
 #images_test = np.genfromtxt(sys.argv[3], delimiter=",")
 images_test = np.genfromtxt("./test_image.csv", delimiter=",")
@@ -185,13 +187,3 @@ for input in images_test:
 
 predictions = np.asarray([predictions])
 np.savetxt("test_predictions.csv", predictions, delimiter=",")
-
-
-answers = np.genfromtxt("./test_label.csv", delimiter=",")
-#labels = np.genfromtxt(sys.argv[2], delimiter="\n")
-predictions = np.genfromtxt("./test_predictions.csv", delimiter=",")
-num_correct_test = 0
-for i in range(10000):
-    if answers[i] == predictions[i]:
-        num_correct_test += 1
-print("accuracy on test set:", num_correct_test / 10000)

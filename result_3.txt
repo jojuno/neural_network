@@ -1,0 +1,203 @@
+learning_rate 0.005 batch_size 1 layer_sizes: [784, 128, 64, 10] bias_0: 5 bias_1: 3 bias_2: 1
+np.sqrt(5 / ...)
+epoch 0
+cost: 0 accuracy: 0.2123
+epoch 1
+cost: 0 accuracy: 0.5085
+epoch 2
+cost: 0 accuracy: 0.5987
+epoch 3
+cost: 0 accuracy: 0.6519
+epoch 4
+cost: 0 accuracy: 0.686
+epoch 5
+cost: 0 accuracy: 0.7089
+epoch 6
+cost: 0 accuracy: 0.7247
+epoch 7
+cost: 0 accuracy: 0.7348
+epoch 8
+cost: 0 accuracy: 0.7384
+epoch 9
+cost: 0 accuracy: 0.745
+epoch 10
+cost: 0 accuracy: 0.7493
+epoch 11
+cost: 0 accuracy: 0.7541
+epoch 12
+cost: 0 accuracy: 0.7586
+epoch 13
+cost: 0 accuracy: 0.763
+epoch 14
+cost: 0 accuracy: 0.7671
+epoch 15
+cost: 0 accuracy: 0.7686
+epoch 16
+cost: 0 accuracy: 0.7722
+epoch 17
+cost: 0 accuracy: 0.7761
+epoch 18
+cost: 0 accuracy: 0.7781
+epoch 19
+cost: 0 accuracy: 0.7822
+epoch 20
+cost: 0 accuracy: 0.7848
+epoch 21
+cost: 0 accuracy: 0.7893
+epoch 22
+cost: 0 accuracy: 0.793
+epoch 23
+cost: 0 accuracy: 0.7962
+epoch 24
+cost: 0 accuracy: 0.798
+epoch 25
+cost: 0 accuracy: 0.802
+epoch 26
+cost: 0 accuracy: 0.8035
+epoch 27
+cost: 0 accuracy: 0.805
+epoch 28
+cost: 0 accuracy: 0.8052
+epoch 29
+cost: 0 accuracy: 0.8093
+epoch 30
+cost: 0 accuracy: 0.8108
+epoch 31
+cost: 0 accuracy: 0.8118
+epoch 32
+cost: 0 accuracy: 0.8132
+epoch 33
+cost: 0 accuracy: 0.8119
+epoch 34
+cost: 0 accuracy: 0.8124
+epoch 35
+cost: 0 accuracy: 0.812
+epoch 36
+cost: 0 accuracy: 0.8104
+epoch 37
+cost: 0 accuracy: 0.8112
+epoch 38
+cost: 0 accuracy: 0.8129
+epoch 39
+cost: 0 accuracy: 0.8156
+epoch 40
+cost: 0 accuracy: 0.8183
+epoch 41
+cost: 0 accuracy: 0.8252
+epoch 42
+cost: 0 accuracy: 0.8305
+epoch 43
+cost: 0 accuracy: 0.8336
+epoch 44
+cost: 0 accuracy: 0.8369
+epoch 45
+cost: 0 accuracy: 0.8406
+epoch 46
+cost: 0 accuracy: 0.8434
+epoch 47
+cost: 0 accuracy: 0.8456
+epoch 48
+cost: 0 accuracy: 0.8483
+epoch 49
+cost: 0 accuracy: 0.8501
+epoch 50
+cost: 0 accuracy: 0.8521
+epoch 51
+cost: 0 accuracy: 0.8545
+epoch 52
+cost: 0 accuracy: 0.8555
+epoch 53
+cost: 0 accuracy: 0.8563
+epoch 54
+cost: 0 accuracy: 0.8591
+epoch 55
+cost: 0 accuracy: 0.8604
+epoch 56
+cost: 0 accuracy: 0.8621
+epoch 57
+cost: 0 accuracy: 0.8631
+epoch 58
+cost: 0 accuracy: 0.8631
+epoch 59
+cost: 0 accuracy: 0.8645
+epoch 60
+cost: 0 accuracy: 0.8651
+epoch 61
+cost: 0 accuracy: 0.8663
+epoch 62
+cost: 0 accuracy: 0.8679
+epoch 63
+cost: 0 accuracy: 0.8693
+epoch 64
+cost: 0 accuracy: 0.8703
+epoch 65
+cost: 0 accuracy: 0.8713
+epoch 66
+cost: 0 accuracy: 0.8722
+epoch 67
+cost: 0 accuracy: 0.8712
+epoch 68
+cost: 0 accuracy: 0.8718
+epoch 69
+cost: 0 accuracy: 0.8721
+epoch 70
+cost: 0 accuracy: 0.8724
+epoch 71
+cost: 0 accuracy: 0.8721
+epoch 72
+cost: 0 accuracy: 0.8718
+epoch 73
+cost: 0 accuracy: 0.8731
+epoch 74
+cost: 0 accuracy: 0.8727
+epoch 75
+cost: 0 accuracy: 0.8747
+epoch 76
+cost: 0 accuracy: 0.8752
+epoch 77
+cost: 0 accuracy: 0.8765
+epoch 78
+cost: 0 accuracy: 0.8777
+epoch 79
+cost: 0 accuracy: 0.8781
+epoch 80
+cost: 0 accuracy: 0.8788
+epoch 81
+cost: 0 accuracy: 0.881
+epoch 82
+cost: 0 accuracy: 0.8821
+epoch 83
+cost: 0 accuracy: 0.8828
+epoch 84
+cost: 0 accuracy: 0.8836
+epoch 85
+cost: 0 accuracy: 0.8838
+epoch 86
+cost: 0 accuracy: 0.8848
+epoch 87
+cost: 0 accuracy: 0.8858
+epoch 88
+cost: 0 accuracy: 0.8869
+epoch 89
+cost: 0 accuracy: 0.8881
+epoch 90
+cost: 0 accuracy: 0.8879
+epoch 91
+cost: 0 accuracy: 0.8882
+epoch 92
+cost: 0 accuracy: 0.8892
+epoch 93
+cost: 0 accuracy: 0.8903
+epoch 94
+cost: 0 accuracy: 0.8909
+epoch 95
+cost: 0 accuracy: 0.8917
+epoch 96
+cost: 0 accuracy: 0.892
+epoch 97
+cost: 0 accuracy: 0.8927
+epoch 98
+cost: 0 accuracy: 0.8931
+epoch 99
+cost: 0 accuracy: 0.8943
+-1637746416.1260061 seconds

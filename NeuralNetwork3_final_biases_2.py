@@ -20,17 +20,11 @@ import matplotlib.pyplot as pyplot
 
 
 def initialize_network(sizes):
-    input_layer = sizes[0]
-    hidden_layer_1 = sizes[1]
-    hidden_layer_2 = sizes[2]
-    output_layer = sizes[3]
-    network = {
-        # dot after number: treat it like a float
-        # add 1 for biases
-        'w0': np.random.randn(hidden_layer_1, input_layer + 1) * np.sqrt(1. / hidden_layer_1),
-        'w1': np.random.randn(hidden_layer_2, hidden_layer_1 + 1) * np.sqrt(1. / hidden_layer_2),
-        'w2': np.random.randn(output_layer, hidden_layer_2 + 1) * np.sqrt(1. / output_layer)
-    }
+    network = {}
+    layer_num = 0
+    for i in range(len(sizes)):
+        network['w' + str(i)] = np.random.randn(sizes[i+1],
+                                                sizes[i]) * np.sqrt(4. / sizes[i+1])
     return network
 
 
@@ -69,25 +63,23 @@ def cross_entropy(o, y, derivative=False):
 bias_0 = 5
 bias_1 = 3
 bias_2 = 1
+biases = [5, 3, 1]
 
 
-def forward_feed(inputs):
+def forward_feed(inputs, biases):
     nn_state = {}
 
-    nn_state['o0'] = inputs
-    # bias
-    nn_state['o0'] = np.append(nn_state['o0'], bias_0)
-
-    nn_state['z1'] = np.matmul(nn['w0'], nn_state['o0'])
-    nn_state['o1'] = sigmoid(nn_state['z1'], False)
-    nn_state['o1'] = np.append(nn_state['o1'], bias_1)
-
-    nn_state['z2'] = np.matmul(nn['w1'], nn_state['o1'])
-    nn_state['o2'] = sigmoid(nn_state['z2'], False)
-    nn_state['o2'] = np.append(nn_state['o2'], bias_2)
-
-    nn_state['z3'] = np.matmul(nn['w2'], nn_state['o2'])
-    nn_state['o3'] = softmax(nn_state['z3'], False)
+    for i in range(len(layer_sizes)):
+        if i == 0:
+            nn_state['o0'] = inputs
+            nn_state['o0'] = np.append(nn_state['o0'], biases[0])
+        elif i != len(layer_sizes) - 1:
+            nn_state['z' + str(i)] = np.matmul(nn['w' + str(i-1)], nn_state['o' + str(i-1)])
+            nn_state['o' + str(i)] = sigmoid(nn_state['z' + str(i)], False)
+            nn_state['o' + str(i)] = np.append(nn_state['o' + str(i)], biases[i])
+        else:
+            nn_state['z' + str(i)] = np.matmul(nn['w' + str(i)], nn_state['o' + str(i)])
+            nn_state['o' + str(i)] = softmax(nn_state['z' + str(i)], False)
 
     return nn_state
 
@@ -95,16 +87,17 @@ def forward_feed(inputs):
 def calculate_gradients(inputs, expected):
     nn_state = forward_feed(inputs)
 
-    nn_state['g3'] = nn_state['o3'] - expected
-    #nn_state['g'] = cross_entropy(nn_state['o4'], expected, derivative=True)
-    nn_state['g2'] = np.matmul(
-        nn_state['g3'], nn['w2'][:, 0:64]) * softmax(nn_state['z2'], derivative=True)
-    nn_state['g2'] = np.append(nn_state['g2'], np.matmul(
-        nn_state['g3'], nn['w2'][:, [64]] * softmax(nn_state['o2'][64], derivative=True)))
-    nn_state['g1'] = np.matmul(nn_state['g2'][0:64], nn['w1']
-                               [0:64, 0:128]) * sigmoid(nn_state['z1'], derivative=True)
-    nn_state['g1'] = np.append(nn_state['g1'], np.matmul(
-        nn_state['g2'][0:64], nn['w1'][0:64, [128]] * sigmoid(nn_state['o1'][128], derivative=True)))
+    for i in reversed(range(len(layer_sizes))):
+        if i == (len(layer_sizes) - 1):
+            nn_state['g' + str(i)] = nn_state['o' + str(i)] - expected
+        elif i == (len(layer_sizes) - 2):
+            nn_state['g' + str(i)] = np.matmul(nn_state['g' + str(i+1)], nn['w' + str(i)][:, 0:layer_sizes[i]]) * softmax(nn_state['z' + str(i)], derivative=True)
+            nn_state['g' + str(i)] = np.append(nn_state['g' + str(i)], np.matmul(nn_state['g' + str(i+1)], nn['w' + str(i)][:, [layer_sizes[i]]] * softmax(nn_state['o' + str(i)][layer_sizes[i]], derivative=True)))
+        elif i > 0: 
+            nn_state['g1'] = np.matmul(nn_state['g2'][0:64], nn['w1']
+                                    [0:64, 0:128]) * sigmoid(nn_state['z1'], derivative=True)
+            nn_state['g1'] = np.append(nn_state['g1'], np.matmul(
+                nn_state['g2'][0:64], nn['w1'][0:64, [128]] * sigmoid(nn_state['o1'][128], derivative=True)))
 
     nn_state['D2'] = np.outer(nn_state['g3'], nn_state['o2'])
     nn_state['D1'] = np.outer(nn_state['g2'][0:64], nn_state['o1'])
@@ -120,8 +113,8 @@ def get_cost(outputs, expected_values):
     return -sum(costs)
 
 
-epochs = 50
-learning_rate = 0.01
+epochs = 100
+learning_rate = 0.005
 batch_size = 1
 #images = np.genfromtxt(sys.argv[1], delimiter=",")
 images = np.genfromtxt("./train_image.csv", delimiter=",")
@@ -140,7 +133,7 @@ for e in range(epochs):
     cost = 0
     num_correct = 0
     num_samples = 0
-    for i in samples:
+    for i in range(10000):
         input = images[i]
         # normalize input
         input = (input / 255).astype('float32')
@@ -185,13 +178,3 @@ for input in images_test:
 
 predictions = np.asarray([predictions])
 np.savetxt("test_predictions.csv", predictions, delimiter=",")
-
-
-answers = np.genfromtxt("./test_label.csv", delimiter=",")
-#labels = np.genfromtxt(sys.argv[2], delimiter="\n")
-predictions = np.genfromtxt("./test_predictions.csv", delimiter=",")
-num_correct_test = 0
-for i in range(10000):
-    if answers[i] == predictions[i]:
-        num_correct_test += 1
-print("accuracy on test set:", num_correct_test / 10000)

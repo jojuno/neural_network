@@ -27,9 +27,10 @@ def initialize_network(sizes):
     network = {
         # dot after number: treat it like a float
         # add 1 for biases
-        'w0': np.random.randn(hidden_layer_1, input_layer + 1) * np.sqrt(1. / hidden_layer_1),
-        'w1': np.random.randn(hidden_layer_2, hidden_layer_1 + 1) * np.sqrt(1. / hidden_layer_2),
-        'w2': np.random.randn(output_layer, hidden_layer_2 + 1) * np.sqrt(1. / output_layer)
+        #'w0': np.random.randn(hidden_layer_1, input_layer + 1) * np.sqrt(4. / hidden_layer_1),
+        'w0': np.random.randn(hidden_layer_1, input_layer + 1) / np.sqrt(hidden_layer_1),
+        'w1': np.random.randn(hidden_layer_2, hidden_layer_1 + 1) * np.sqrt(hidden_layer_2),
+        'w2': np.random.randn(output_layer, hidden_layer_2 + 1) * np.sqrt(output_layer)
     }
     return network
 
@@ -66,9 +67,9 @@ def cross_entropy(o, y, derivative=False):
         return -c
 
 
-bias_0 = 5
-bias_1 = 3
-bias_2 = 1
+bias_0 = 0
+bias_1 = 0
+bias_2 = 0
 
 
 def forward_feed(inputs):
@@ -120,8 +121,8 @@ def get_cost(outputs, expected_values):
     return -sum(costs)
 
 
-epochs = 50
-learning_rate = 0.01
+epochs = 100
+learning_rate = 0.001
 batch_size = 1
 #images = np.genfromtxt(sys.argv[1], delimiter=",")
 images = np.genfromtxt("./train_image.csv", delimiter=",")
@@ -140,7 +141,7 @@ for e in range(epochs):
     cost = 0
     num_correct = 0
     num_samples = 0
-    for i in samples:
+    for i in range(10000):
         input = images[i]
         # normalize input
         input = (input / 255).astype('float32')
@@ -185,13 +186,3 @@ for input in images_test:
 
 predictions = np.asarray([predictions])
 np.savetxt("test_predictions.csv", predictions, delimiter=",")
-
-
-answers = np.genfromtxt("./test_label.csv", delimiter=",")
-#labels = np.genfromtxt(sys.argv[2], delimiter="\n")
-predictions = np.genfromtxt("./test_predictions.csv", delimiter=",")
-num_correct_test = 0
-for i in range(10000):
-    if answers[i] == predictions[i]:
-        num_correct_test += 1
-print("accuracy on test set:", num_correct_test / 10000)
