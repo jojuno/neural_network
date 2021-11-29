@@ -98,7 +98,7 @@ def calculate_gradients(inputs, biases, expected):
 
 epochs = 50
 learning_rate = 0.2
-learning_adjust_epoch = 25
+learning_adjust_epoch = 10
 learning_adjust_rate = 0.002
 #images = np.genfromtxt("./train_image.csv", delimiter=",")
 images = np.genfromtxt(sys.argv[1], delimiter=",")
